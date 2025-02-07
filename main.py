@@ -14,6 +14,61 @@ import random
 import typing
 
 
+class MoveSet:
+    def __init__(self):
+        self.up = Move("up", True, 0)
+        self.down = Move("down", True, 0)
+        self.left = Move("left", True, 0)
+        self.right = Move("right", True, 0)
+
+    def combine(self, other):
+        self.up = self.up.combine(other.up)
+        self.down = self.down.combine(other.down)
+        self.left = self.left.combine(other.left)
+        self.right = self.right.combine(other.right)
+
+    def has_safe_moves(self):
+        return (
+            self.up.is_safe
+            or self.down.is_safe
+            or self.left.is_safe
+            or self.right.is_safe
+        )
+
+    def choose_move(self):
+        chosen_move = self.up
+        if self.down.is_safe and self.down.preferrable > chosen_move.preferrable:
+            chosen_move = self.down
+
+        if self.left.is_safe and self.left.preferrable > chosen_move.preferrable:
+            chosen_move = self.left
+
+        if self.right.is_safe and self.right.preferrable > chosen_move.preferrable:
+            chosen_move = self.right
+
+        return chosen_move
+
+
+# Class for storing move information
+# direction: The direction of the move
+# is_safe: Whether the move is safe
+# preferrable: How preferrable the move is between -10 and 10
+class Move:
+    def __init__(self, direction, is_safe, preferrable):
+        self.direction = direction
+        self.is_safe = is_safe
+        self.preferrable = preferrable
+
+    def combine(self, other):
+        self.is_safe = self.is_safe and other.is_safe
+        self.preferrable = (self.preferrable + other.preferrable) / 2
+        return self
+
+    def add_preferrable(self, preferrable):
+        self.preferrable += preferrable
+        return self
+
+
 # info is called when you create your Battlesnake on play.battlesnake.com
 # and controls your Battlesnake's appearance
 # TIP: If you open your Battlesnake URL in a browser you should see this data
@@ -161,58 +216,3 @@ if __name__ == "__main__":
     from server import run_server
 
     run_server({"info": info, "start": start, "move": move, "end": end})
-
-
-class MoveSet:
-    def __init__(self):
-        self.up = Move("up", True, 0)
-        self.down = Move("down", True, 0)
-        self.left = Move("left", True, 0)
-        self.right = Move("right", True, 0)
-
-    def combine(self, other):
-        self.up = self.up.combine(other.up)
-        self.down = self.down.combine(other.down)
-        self.left = self.left.combine(other.left)
-        self.right = self.right.combine(other.right)
-
-    def has_safe_moves(self):
-        return (
-            self.up.is_safe
-            or self.down.is_safe
-            or self.left.is_safe
-            or self.right.is_safe
-        )
-
-    def choose_move(self):
-        chosen_move = self.up
-        if self.down.is_safe and self.down.preferrable > chosen_move.preferrable:
-            chosen_move = self.down
-
-        if self.left.is_safe and self.left.preferrable > chosen_move.preferrable:
-            chosen_move = self.left
-
-        if self.right.is_safe and self.right.preferrable > chosen_move.preferrable:
-            chosen_move = self.right
-
-        return chosen_move
-
-
-# Class for storing move information
-# direction: The direction of the move
-# is_safe: Whether the move is safe
-# preferrable: How preferrable the move is between -10 and 10
-class Move:
-    def __init__(self, direction, is_safe, preferrable):
-        self.direction = direction
-        self.is_safe = is_safe
-        self.preferrable = preferrable
-
-    def combine(self, other):
-        self.is_safe = self.is_safe and other.is_safe
-        self.preferrable = (self.preferrable + other.preferrable) / 2
-        return self
-
-    def add_preferrable(self, preferrable):
-        self.preferrable += preferrable
-        return self
