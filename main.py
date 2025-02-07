@@ -142,12 +142,15 @@ def move(game_state: typing.Dict) -> typing.Dict:
     return {"move": next_move.direction}
 
 
-def evaluate_food(my_head, food, snakes):
+def evaluate_food(my_snake, food, snakes):
     food_move_set = MoveSet()
 
-    path_to_food = move_vector(my_head, food)
+    path_to_food = move_vector(my_snake["body"][0], food)
 
     for snake in snakes:
+        if snake["id"] == my_snake["id"]:
+            continue
+
         snake_path_to_food = move_vector(snake["body"][0], food)
         if abs(snake_path_to_food["x"]) + abs(snake_path_to_food["y"]) < abs(
             path_to_food["x"]
