@@ -69,16 +69,38 @@ def move(game_state: typing.Dict) -> typing.Dict:
     if not my_move_set.has_safe_moves():
         print(f"MOVE {game_state['turn']}: No safe moves detected! Moving down")
         return {"move": "down"}
-    
+
     for snake in game_state["board"]["snakes"]:
         if snake["id"] == my_snake["id"]:
             continue
         my_move_set.combine(to_eat_or_not_to_eat(my_snake, snake))
 
     food = game_state["board"]["food"]
-    
+
     for food_item in food:
-    
+        food_move_set = MoveSet()
+
+        path_to_food = move_vector(my_head, food_item)
+
+        for snake in game_state["board"]["snakes"]:
+            snake_path_to_food = move_vector(snake["body"][0], food_item)
+            if abs(snake_path_to_food["x"]) + abs(snake_path_to_food["y"]) < abs(
+                path_to_food["x"]
+            ) + abs(path_to_food["y"]):
+                return MoveSet()
+            else:
+                # find preferabel direcetion to the food
+                if path_to_food["x"] > 0:
+                    food_move_set.right.add_preferrable(10)
+                if path_to_food["x"] < 0:
+                    food_move_set.left.add_preferrable(10)
+                if path_to_food["y"] > 0:
+                    food_move_set.up.add_preferrable(10)
+                if path_to_food["y"] < 0:
+                    food_move_set.down.add_preferrable(10)
+
+        my_move_set.combine(food_move_set)
+
     next_move = my_move_set.choose_move()
     print(f"MOVE {game_state['turn']}: {next_move.direction}")
     return {"move": next_move.direction}
@@ -161,7 +183,7 @@ class MoveSet:
             or self.left.is_safe
             or self.right.is_safe
         )
-    
+
     def choose_move(self):
         chosen_move = self.up
         if self.down.is_safe and self.down.preferrable > chosen_move.preferrable:
@@ -174,6 +196,7 @@ class MoveSet:
             chosen_move = self.right
 
         return chosen_move
+
 
 # Class for storing move information
 # direction: The direction of the move
