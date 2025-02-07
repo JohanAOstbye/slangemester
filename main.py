@@ -46,7 +46,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
     my_move_set = MoveSet()
 
     # We've included code to prevent your Battlesnake from moving backwards
-    my_head = game_state["you"]["body"][0]  # Coordinates of your head
+    my_snake = game_state["you"]
+    my_head = my_snake["body"][0]  # Coordinates of your head
 
     # TODO: Step 1 - Prevent your Battlesnake from moving out of bounds
     board_width = game_state["board"]["width"]
@@ -68,8 +69,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
     if not my_move_set.has_safe_moves():
         print(f"MOVE {game_state['turn']}: No safe moves detected! Moving down")
         return {"move": "down"}
+    
+    for snake in game_state["board"]["snakes"]:
+        if snake["id"] == my_snake["id"]:
+            continue
+        my_move_set.combine(to_eat_or_not_to_eat(my_snake, snake))
 
     food = game_state["board"]["food"]
+    
+    for food_item in food:
+        
 
     print(f"MOVE {game_state['turn']}: {next_move}")
     return {"move": next_move}
@@ -97,7 +106,7 @@ def move_vector(origin, destination):
     }
 
 
-def eat_or_not_to_eat(my_snake, other_snake):
+def to_eat_or_not_to_eat(my_snake, other_snake):
     eat_move_set = MoveSet()
     other_snake_head = other_snake["body"][0]
     my_snake_head = my_snake["body"][0]
