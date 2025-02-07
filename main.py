@@ -61,7 +61,7 @@ class Move:
 
     def combine(self, other):
         self.is_safe = self.is_safe and other.is_safe
-        self.preferrable = (self.preferrable + other.preferrable) / 2
+        self.preferrable += other.preferrable
         return self
 
     def add_preferrable(self, preferrable, message=""):
