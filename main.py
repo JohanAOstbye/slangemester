@@ -89,29 +89,42 @@ def collides_with_snake(my_head, snake):
             sanke_move_set.left.is_safe = False
     return sanke_move_set
 
+
+def move_vector(origin, destination):
+    return {
+        "x": destination["x"] - origin["x"],
+        "y": destination["y"] - origin["y"],
+    }
+
+
 def eat_or_not_to_eat(my_snake, other_snake):
-    if my_snake["length"] > other_snake["length"]:
-        return {"up": False, "down": False, "left": False, "right": False}
+    eat_move_set = MoveSet()
     other_snake_head = other_snake["body"][0]
     my_snake_head = my_snake["body"][0]
+
+    if my_snake["length"] > other_snake["length"]:
+        path_to_other_snake = move_vector(my_snake_head, other_snake_head)
+        if path_to_other_snake["x"] > 0:
+            eat_move_set.right.add_preferrable(10)
+        return eat_move_set
 
     calculated_distance = abs(my_snake_head["x"] - other_snake_head["x"]) + abs(
         my_snake_head["y"] - other_snake_head["y"]
     )
     if calculated_distance > 2:
-        return {"up": False, "down": False, "left": False, "right": False}
+        return eat_move_set
 
     if my_snake_head["x"] == other_snake_head["x"]:
         if my_snake_head["y"] > other_snake_head["y"]:
-            return {"up": False, "down": True, "left": False, "right": False}
+            eat_move_set.up.add_preferrable(-10)
         else:
-            return {"up": True, "down": False, "left": False, "right": False}
+            eat_move_set.down.add_preferrable(-10)
     if my_snake_head["y"] == other_snake_head["y"]:
         if my_snake_head["x"] > other_snake_head["x"]:
-            return {"up": False, "down": False, "left": False, "right": True}
+            eat_move_set.left.add_preferrable(-10)
         else:
-            return {"up": False, "down": False, "left": True, "right": False}
-    return {"up": False, "down": False, "left": False, "right": False}
+            eat_move_set.right.add_preferrable(-10)
+    return eat_move_set
 
 
 # Start server when `python main.py` is run
@@ -143,6 +156,10 @@ class MoveSet:
         )
 
 
+# Class for storing move information
+# direction: The direction of the move
+# is_safe: Whether the move is safe
+# preferrable: How preferrable the move is between -10 and 10
 class Move:
     def __init__(self, direction, is_safe, preferrable):
         self.direction = direction
@@ -152,4 +169,8 @@ class Move:
     def combine(self, other):
         self.is_safe = self.is_safe and other.is_safe
         self.preferrable = (self.preferrable + other.preferrable) / 2
+        return self
+
+    def add_preferrable(self, preferrable):
+        self.preferrable += preferrable
         return self
