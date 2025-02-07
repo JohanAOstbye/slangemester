@@ -36,17 +36,14 @@ class MoveSet:
         )
 
     def choose_move(self):
-        chosen_move = self.up
-        if self.down.is_safe and self.down.preferrable > chosen_move.preferrable:
-            chosen_move = self.down
+        moves = [self.up, self.down, self.left, self.right]
+        moves = sorted(moves, key=lambda x: x.preferrable, reverse=True)
+        print(f"Moves: {moves}")
+        for move in moves:
+            if move.is_safe:
+                return move
 
-        if self.left.is_safe and self.left.preferrable > chosen_move.preferrable:
-            chosen_move = self.left
-
-        if self.right.is_safe and self.right.preferrable > chosen_move.preferrable:
-            chosen_move = self.right
-
-        return chosen_move
+        return moves[0]
 
 
 # Class for storing move information
@@ -134,7 +131,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     for food_item in food:
         my_move_set.combine(
-            evaluate_food(my_head, food_item, game_state["board"]["snakes"])
+            evaluate_food(my_snake, food_item, game_state["board"]["snakes"])
         )
 
     next_move = my_move_set.choose_move()
@@ -159,13 +156,13 @@ def evaluate_food(my_snake, food, snakes):
         else:
             # find preferabel direcetion to the food
             if path_to_food["x"] > 0:
-                food_move_set.right.add_preferrable(10)
+                food_move_set.right.add_preferrable(5)
             if path_to_food["x"] < 0:
-                food_move_set.left.add_preferrable(10)
+                food_move_set.left.add_preferrable(5)
             if path_to_food["y"] > 0:
-                food_move_set.up.add_preferrable(10)
+                food_move_set.up.add_preferrable(5)
             if path_to_food["y"] < 0:
-                food_move_set.down.add_preferrable(10)
+                food_move_set.down.add_preferrable(5)
 
     return food_move_set
 
