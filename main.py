@@ -141,7 +141,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
             evaluate_food(my_snake, food_item, game_state["board"]["snakes"])
         )
         
-    my_move_set.combine(evaluate_next_turn(my_snake, game_state["board"]["snakes"]))
+    # my_move_set.combine(evaluate_next_turn(my_snake, game_state["board"]["snakes"]))
     
     #aim towards the center with preferrable 3
     if my_head["x"] < 5:
