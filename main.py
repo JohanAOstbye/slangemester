@@ -156,13 +156,13 @@ def evaluate_food(my_snake, food, snakes):
         else:
             # find preferabel direcetion to the food
             if path_to_food["x"] > 0:
-                food_move_set.right.add_preferrable(10)
+                food_move_set.right.add_preferrable(5)
             if path_to_food["x"] < 0:
-                food_move_set.left.add_preferrable(10)
+                food_move_set.left.add_preferrable(5)
             if path_to_food["y"] > 0:
-                food_move_set.up.add_preferrable(10)
+                food_move_set.up.add_preferrable(5)
             if path_to_food["y"] < 0:
-                food_move_set.down.add_preferrable(10)
+                food_move_set.down.add_preferrable(5)
 
     return food_move_set
 
