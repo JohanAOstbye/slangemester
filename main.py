@@ -134,7 +134,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     for food_item in food:
         my_move_set.combine(
-            evaluate_food(my_head, food_item, game_state["board"]["snakes"])
+            evaluate_food(my_snake, food_item, game_state["board"]["snakes"])
         )
 
     next_move = my_move_set.choose_move()
