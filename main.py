@@ -41,7 +41,7 @@ class MoveSet:
     def choose_move(self):
         moves = [self.up, self.down, self.left, self.right]
         moves = sorted(moves, key=lambda x: x.preferrable, reverse=True)
-        print(f"Moves: {moves}")
+        print(f"Moves: {self}")
         for move in moves:
             if move.is_safe:
                 return move
@@ -64,9 +64,13 @@ class Move:
         self.preferrable = (self.preferrable + other.preferrable) / 2
         return self
 
-    def add_preferrable(self, preferrable):
+    def add_preferrable(self, preferrable, message=""):
+        print(f"Adding {preferrable} to {self.direction} because {message}")
         self.preferrable += preferrable
         return self
+
+    def __str__(self):
+        return f"{self.direction}: {self.preferrable}"
 
 
 # info is called when you create your Battlesnake on play.battlesnake.com
@@ -141,13 +145,13 @@ def move(game_state: typing.Dict) -> typing.Dict:
     
     #aim towards the center with preferrable 3
     if my_head["x"] < 5:
-        my_move_set.right.add_preferrable(3)
+        my_move_set.right.add_preferrable(3, "center")
     if my_head["x"] > 5:
-        my_move_set.left.add_preferrable(3)
+        my_move_set.left.add_preferrable(3, "center")
     if my_head["y"] < 5:
-        my_move_set.up.add_preferrable(3)
+        my_move_set.up.add_preferrable(3, "center")
     if my_head["y"] > 5:
-        my_move_set.down.add_preferrable(3)
+        my_move_set.down.add_preferrable(3, "center")
 
     next_move = my_move_set.choose_move()
     print(f"MOVE {game_state['turn']}: {next_move.direction}")
@@ -304,40 +308,40 @@ def evaluate_next_turn(my_snake, snakes):
         match possible_move["move"]:
             case "up":
                 if my_average == 0:
-                    next_turn_move_set.up.add_preferrable(-100)
+                    next_turn_move_set.up.add_preferrable(-100, "dead")
                 if my_average < 1.7:
-                    next_turn_move_set.up.add_preferrable(-7)
+                    next_turn_move_set.up.add_preferrable(-7, "blocked")
                 elif my_average > 2.5:
-                    next_turn_move_set.up.add_preferrable(3)
+                    next_turn_move_set.up.add_preferrable(3, "open")
                 else:
-                    next_turn_move_set.up.add_preferrable(7)
+                    next_turn_move_set.up.add_preferrable(7, "open -yes")
             case "down":
                 if my_average == 0:
-                    next_turn_move_set.down.add_preferrable(-100)
+                    next_turn_move_set.down.add_preferrable(-100, "dead")
                 if my_average < 1.7:
-                    next_turn_move_set.down.add_preferrable(-7)
+                    next_turn_move_set.down.add_preferrable(-7, "blocked")
                 elif my_average > 2.5:
-                    next_turn_move_set.down.add_preferrable(3)
+                    next_turn_move_set.down.add_preferrable(3, "open")
                 else:
-                    next_turn_move_set.down.add_preferrable(7)
+                    next_turn_move_set.down.add_preferrable(7, "open -yes")
             case "left":
                 if my_average == 0:
-                    next_turn_move_set.left.add_preferrable(-100)
+                    next_turn_move_set.left.add_preferrable(-100, "dead")
                 if my_average < 1.7:
-                    next_turn_move_set.left.add_preferrable(-7)
+                    next_turn_move_set.left.add_preferrable(-7, "blocked")
                 elif my_average > 2.5:
-                    next_turn_move_set.left.add_preferrable(3)
+                    next_turn_move_set.left.add_preferrable(3, "open")
                 else:
-                    next_turn_move_set.left.add_preferrable(7)
+                    next_turn_move_set.left.add_preferrable(7, "open -yes")
             case "right":
                 if my_average == 0:
-                    next_turn_move_set.right.add_preferrable(-100)
+                    next_turn_move_set.right.add_preferrable(-100, "dead")
                 if my_average < 1.7:
-                    next_turn_move_set.right.add_preferrable(-7)
+                    next_turn_move_set.right.add_preferrable(-7, "blocked")
                 elif my_average > 2.5:
-                    next_turn_move_set.right.add_preferrable(3)
+                    next_turn_move_set.right.add_preferrable(3, "open")
                 else:
-                    next_turn_move_set.right.add_preferrable(7)
+                    next_turn_move_set.right.add_preferrable(7, "open -yes")
                     
     return next_turn_move_set
 
@@ -359,13 +363,13 @@ def evaluate_food(my_snake, food, snakes):
         else:
             # find preferabel direcetion to the food
             if path_to_food["x"] > 0:
-                food_move_set.right.add_preferrable(5)
+                food_move_set.right.add_preferrable(5, "food")
             if path_to_food["x"] < 0:
-                food_move_set.left.add_preferrable(5)
+                food_move_set.left.add_preferrable(5, "food")
             if path_to_food["y"] > 0:
-                food_move_set.up.add_preferrable(5)
+                food_move_set.up.add_preferrable(5, "food")
             if path_to_food["y"] < 0:
-                food_move_set.down.add_preferrable(5)
+                food_move_set.down.add_preferrable(5, "food")
 
     return food_move_set
 
@@ -408,13 +412,13 @@ def to_eat_or_not_to_eat(my_snake, other_snake):
 
     pref = 10*win
     if path_to_other_snake["x"] > 0:
-        eat_move_set.right.add_preferrable(pref)
+        eat_move_set.right.add_preferrable(pref, "killing")
     if path_to_other_snake["x"] < 0:
-        eat_move_set.left.add_preferrable(pref)
+        eat_move_set.left.add_preferrable(pref, "killing")
     if path_to_other_snake["y"] > 0:
-        eat_move_set.up.add_preferrable(pref)
+        eat_move_set.up.add_preferrable(pref, "killing")
     if path_to_other_snake["y"] < 0:
-        eat_move_set.down.add_preferrable(pref)
+        eat_move_set.down.add_preferrable(pref, "killing")
 
     return eat_move_set
 
