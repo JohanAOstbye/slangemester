@@ -138,6 +138,16 @@ def move(game_state: typing.Dict) -> typing.Dict:
         )
         
     my_move_set.combine(evaluate_next_turn(my_snake, game_state["board"]["snakes"]))
+    
+    #aim towards the center with preferrable 3
+    if my_head["x"] < 5:
+        my_move_set.right.add_preferrable(3)
+    if my_head["x"] > 5:
+        my_move_set.left.add_preferrable(3)
+    if my_head["y"] < 5:
+        my_move_set.up.add_preferrable(3)
+    if my_head["y"] > 5:
+        my_move_set.down.add_preferrable(3)
 
     next_move = my_move_set.choose_move()
     print(f"MOVE {game_state['turn']}: {next_move.direction}")
