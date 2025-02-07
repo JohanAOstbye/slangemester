@@ -101,29 +101,27 @@ def eat_or_not_to_eat(my_snake, other_snake):
     eat_move_set = MoveSet()
     other_snake_head = other_snake["body"][0]
     my_snake_head = my_snake["body"][0]
+    path_to_other_snake = move_vector(my_snake_head, other_snake_head)
 
     if my_snake["length"] > other_snake["length"]:
-        path_to_other_snake = move_vector(my_snake_head, other_snake_head)
         if path_to_other_snake["x"] > 0:
             eat_move_set.right.add_preferrable(10)
         return eat_move_set
 
-    calculated_distance = abs(my_snake_head["x"] - other_snake_head["x"]) + abs(
-        my_snake_head["y"] - other_snake_head["y"]
-    )
+    calculated_distance = abs(path_to_other_snake["x"]) + abs(path_to_other_snake["y"])
+
     if calculated_distance > 2:
         return eat_move_set
 
-    if my_snake_head["x"] == other_snake_head["x"]:
-        if my_snake_head["y"] > other_snake_head["y"]:
-            eat_move_set.up.add_preferrable(-10)
-        else:
-            eat_move_set.down.add_preferrable(-10)
-    if my_snake_head["y"] == other_snake_head["y"]:
-        if my_snake_head["x"] > other_snake_head["x"]:
-            eat_move_set.left.add_preferrable(-10)
-        else:
-            eat_move_set.right.add_preferrable(-10)
+    if path_to_other_snake["x"] > 0:
+        eat_move_set.right.add_preferrable(10)
+    if path_to_other_snake["x"] < 0:
+        eat_move_set.left.add_preferrable(10)
+    if path_to_other_snake["y"] > 0:
+        eat_move_set.up.add_preferrable(10)
+    if path_to_other_snake["y"] < 0:
+        eat_move_set.down.add_preferrable(10)
+
     return eat_move_set
 
 
