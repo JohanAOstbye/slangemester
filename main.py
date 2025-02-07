@@ -296,10 +296,15 @@ def evaluate_next_turn(my_snake, snakes):
 
     # get the average amount of moves for each move
     for possible_move in possible_moves:
-        my_average = sum(possible_move["my_moves_amount"]) / len(possible_move["my_moves_amount"])
-        other_snake_average = sum(possible_move["other_snake_moves_amount"]) / len(possible_move["other_snake_moves_amount"])
+        
+        my_average = 0
+        if len(possible_move["my_moves_amount"]) != 0:
+            my_average = sum(possible_move["my_moves_amount"]) / len(possible_move["my_moves_amount"])
+        # other_snake_average = sum(possible_move["other_snake_moves_amount"]) / len(possible_move["other_snake_moves_amount"])
         match possible_move["move"]:
             case "up":
+                if my_average == 0:
+                    next_turn_move_set.up.add_preferrable(-100)
                 if my_average < 1.7:
                     next_turn_move_set.up.add_preferrable(-7)
                 elif my_average > 2.5:
@@ -307,6 +312,8 @@ def evaluate_next_turn(my_snake, snakes):
                 else:
                     next_turn_move_set.up.add_preferrable(7)
             case "down":
+                if my_average == 0:
+                    next_turn_move_set.down.add_preferrable(-100)
                 if my_average < 1.7:
                     next_turn_move_set.down.add_preferrable(-7)
                 elif my_average > 2.5:
@@ -314,6 +321,8 @@ def evaluate_next_turn(my_snake, snakes):
                 else:
                     next_turn_move_set.down.add_preferrable(7)
             case "left":
+                if my_average == 0:
+                    next_turn_move_set.left.add_preferrable(-100)
                 if my_average < 1.7:
                     next_turn_move_set.left.add_preferrable(-7)
                 elif my_average > 2.5:
@@ -321,6 +330,8 @@ def evaluate_next_turn(my_snake, snakes):
                 else:
                     next_turn_move_set.left.add_preferrable(7)
             case "right":
+                if my_average == 0:
+                    next_turn_move_set.right.add_preferrable(-100)
                 if my_average < 1.7:
                     next_turn_move_set.right.add_preferrable(-7)
                 elif my_average > 2.5:
