@@ -35,6 +35,9 @@ class MoveSet:
             or self.right.is_safe
         )
 
+    def __str__(self):
+        return f"Up: {self.up.preferrable}, Down: {self.down.preferrable}, Left: {self.left.preferrable}, Right: {self.right.preferrable}"
+
     def choose_move(self):
         moves = [self.up, self.down, self.left, self.right]
         moves = sorted(moves, key=lambda x: x.preferrable, reverse=True)
@@ -137,6 +140,183 @@ def move(game_state: typing.Dict) -> typing.Dict:
     next_move = my_move_set.choose_move()
     print(f"MOVE {game_state['turn']}: {next_move.direction}")
     return {"move": next_move.direction}
+
+
+# Function for evaluating the next turn where it prefers to have 2 avaliable moves, then 3, then 1
+def evaluate_next_turn(my_snake, snakes):
+    next_turn_move_set = MoveSet()
+
+    # simulating the next turn
+
+    # all snakes cordinates
+    taken_positions = []
+    for snake in snakes:
+        taken_positions += snake["body"]
+
+    possible_positions = []
+
+    for my_move in ["up", "down", "left", "right"]:
+        next_head = {
+            "x": my_snake["body"][0]["x"],
+            "y": my_snake["body"][0]["y"],
+        }
+        if my_move == "up":
+            next_head["y"] += 1
+        if my_move == "down":
+            next_head["y"] -= 1
+        if my_move == "left":
+            next_head["x"] -= 1
+        if my_move == "right":
+            next_head["x"] += 1
+
+        if (
+            next_head["x"] < 0
+            or next_head["x"] >= 11
+            or next_head["y"] < 0
+            or next_head["y"] >= 11
+        ):
+            continue
+
+        if next_head in taken_positions:
+            continue
+        taken_positions.append(next_head)
+
+        my_next_snake = my_snake.copy()
+        my_next_snake["body"].insert(0, next_head)
+        my_next_snake["body"].pop()
+
+        for snake in snakes:
+            if snake["id"] == my_snake["id"]:
+                continue
+            for other_snake_move in ["up", "down", "left", "right"]:
+                other_snake_next_head = {
+                    "x": snake["body"][0]["x"],
+                    "y": snake["body"][0]["y"],
+                }
+                if other_snake_move == "up":
+                    other_snake_next_head["y"] += 1
+                if other_snake_move == "down":
+                    other_snake_next_head["y"] -= 1
+                if other_snake_move == "left":
+                    other_snake_next_head["x"] -= 1
+                if other_snake_move == "right":
+                    other_snake_next_head["x"] += 1
+
+                if other_snake_next_head in taken_positions:
+                    continue
+
+                snake_next_snake = snake.copy()
+                snake_next_snake["body"].insert(0, other_snake_next_head)
+                snake_next_snake["body"].pop()
+
+                possible_positions.append((my_move, my_next_snake, snake_next_snake))
+
+    # calualte the amount of possible moves
+    possible_moves = [
+        {
+            "move": "up",
+            "my_moves_amount": [],
+            "other_snake_moves_amount": [],
+        },
+        {
+            "move": "down",
+            "my_moves_amount": [],
+            "other_snake_moves_amount": [],
+        },
+        {
+            "move": "left",
+            "my_moves_amount": [],
+            "other_snake_moves_amount": [],
+        },
+        {
+            "move": "right",
+            "my_moves_amount": [],
+            "other_snake_moves_amount": [],
+        },
+    ]
+    for position in possible_positions:
+        my_move = position[0]
+        my_next_snake = position[1]
+        snake_next_snake = position[2]
+        possition_takenpositions = taken_positions.copy()
+        possition_takenpositions.append(my_next_snake["body"][0])
+
+        # if head is in the same position
+        if my_next_snake["body"][0] == snake_next_snake["body"][0]:
+            print("Head to head")
+            continue
+
+        my_possible_moves = 4
+        other_snake_possible_moves = 4
+        for new_move in ["up", "down", "left", "right"]:
+            my_next_head = {
+                "x": my_next_snake["body"][0]["x"],
+                "y": my_next_snake["body"][0]["y"],
+            }
+            other_snake_next_head = {
+                "x": snake_next_snake["body"][0]["x"],
+                "y": snake_next_snake["body"][0]["y"],
+            }
+            if new_move == "up":
+                my_next_head["y"] += 1
+                other_snake_next_head["y"] += 1
+            if new_move == "down":
+                my_next_head["y"] -= 1
+                other_snake_next_head["y"] -= 1
+            if new_move == "left":
+                my_next_head["x"] -= 1
+                other_snake_next_head["x"] -= 1
+            if new_move == "right":
+                my_next_head["x"] += 1
+                other_snake_next_head["x"] += 1
+
+            if my_next_head in possition_takenpositions:
+                my_possible_moves -= 1
+            if other_snake_next_head in possition_takenpositions:
+                other_snake_possible_moves -= 1
+
+        for possible_move in possible_moves:
+            if possible_move["move"] == my_move:
+                possible_move["my_moves_amount"].append(my_possible_moves)
+                possible_move["other_snake_moves_amount"].append(
+                    other_snake_possible_moves
+                )
+
+    # get the average amount of moves for each move
+    for possible_move in possible_moves:
+        my_average = sum(possible_move["my_moves_amount"]) / len(possible_move["my_moves_amount"])
+        other_snake_average = sum(possible_move["other_snake_moves_amount"]) / len(possible_move["other_snake_moves_amount"])
+        match possible_move["move"]:
+            case "up":
+                if my_average < 1.7:
+                    next_turn_move_set.up.add_preferrable(-7)
+                elif my_average > 2.5:
+                    next_turn_move_set.up.add_preferrable(3)
+                else:
+                    next_turn_move_set.up.add_preferrable(7)
+            case "down":
+                if my_average < 1.7:
+                    next_turn_move_set.down.add_preferrable(-7)
+                elif my_average > 2.5:
+                    next_turn_move_set.down.add_preferrable(3)
+                else:
+                    next_turn_move_set.down.add_preferrable(7)
+            case "left":
+                if my_average < 1.7:
+                    next_turn_move_set.left.add_preferrable(-7)
+                elif my_average > 2.5:
+                    next_turn_move_set.left.add_preferrable(3)
+                else:
+                    next_turn_move_set.left.add_preferrable(7)
+            case "right":
+                if my_average < 1.7:
+                    next_turn_move_set.right.add_preferrable(-7)
+                elif my_average > 2.5:
+                    next_turn_move_set.right.add_preferrable(3)
+                else:
+                    next_turn_move_set.right.add_preferrable(7)
+                    
+    return next_turn_move_set
 
 
 def evaluate_food(my_snake, food, snakes):
