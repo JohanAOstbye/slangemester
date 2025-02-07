@@ -136,6 +136,8 @@ def move(game_state: typing.Dict) -> typing.Dict:
         my_move_set.combine(
             evaluate_food(my_snake, food_item, game_state["board"]["snakes"])
         )
+        
+    my_move_set.combine(evaluate_next_turn(my_snake, game_state["board"]["snakes"]))
 
     next_move = my_move_set.choose_move()
     print(f"MOVE {game_state['turn']}: {next_move.direction}")
