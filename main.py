@@ -65,7 +65,7 @@ def move(game_state: typing.Dict) -> typing.Dict:
         my_move_set.combine(collides_with_snake(my_head, snake))
 
     # Are there any safe moves left?
-    if my_move_set.has_safe_moves():
+    if not my_move_set.has_safe_moves():
         print(f"MOVE {game_state['turn']}: No safe moves detected! Moving down")
         return {"move": "down"}
 
@@ -88,29 +88,6 @@ def collides_with_snake(my_head, snake):
         elif my_head["x"] - 1 == body_part["x"] and my_head["y"] == body_part["y"]:
             sanke_move_set.left.is_safe = False
     return sanke_move_set
-
-
-def update_move(first_move_set, second_move_set):
-
-    return {
-        "up": update_move_direction(first_move_set["up"], second_move_set["up"]),
-        "down": update_move_direction(first_move_set["down"], second_move_set["down"]),
-        "left": update_move_direction(first_move_set["left"], second_move_set["left"]),
-        "right": update_move_direction(
-            first_move_set["right"], second_move_set["right"]
-        ),
-    }
-
-
-def update_move_direction(first_move_direction, second_move_direction):
-    return {
-        "safe": first_move_direction["safe"] and second_move_direction["safe"],
-        "preferrable": (
-            first_move_direction["preferrable"] + second_move_direction["preferrable"]
-        )
-        / 2,
-    }
-
 
 def eat_or_not_to_eat(my_snake, other_snake):
     if my_snake["length"] > other_snake["length"]:
