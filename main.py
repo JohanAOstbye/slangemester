@@ -48,34 +48,28 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     # We've included code to prevent your Battlesnake from moving backwards
     my_head = game_state["you"]["body"][0]  # Coordinates of your head
-    my_neck = game_state["you"]["body"][1]  # Coordinates of your "neck"
-
-    if my_neck["x"] < my_head["x"]:  # Neck is left of head, don't move left
-        is_move_safe["left"] = False
-
-    elif my_neck["x"] > my_head["x"]:  # Neck is right of head, don't move right
-        is_move_safe["right"] = False
-
-    elif my_neck["y"] < my_head["y"]:  # Neck is below head, don't move down
-        is_move_safe["down"] = False
-
-    elif my_neck["y"] > my_head["y"]:  # Neck is above head, don't move up
-        is_move_safe["up"] = False
 
     # TODO: Step 1 - Prevent your Battlesnake from moving out of bounds
-    # board_width = game_state['board']['width']
-    # board_height = game_state['board']['height']
+    board_width = game_state["board"]["width"]
+    board_height = game_state["board"]["height"]
 
-    # TODO: Step 2 - Prevent your Battlesnake from colliding with itself
-    # my_body = game_state['you']['body']
+    if my_head["x"] == 0:
+        is_move_safe["left"] = False
+    if my_head["x"] == board_width - 1:
+        is_move_safe["right"] = False
+    if my_head["y"] == 0:
+        is_move_safe["down"] = False
+    if my_head["y"] == board_height - 1:
+        is_move_safe["up"] = False
 
-    # TODO: Step 3 - Prevent your Battlesnake from colliding with other Battlesnakes
-    # opponents = game_state['board']['snakes']
+    for snake in game_state["board"]["snakes"]:
+        is_snake_move_safe = collides_with_snake(my_head, snake)
+        is_move_safe = update_is_safe_move(is_move_safe, is_snake_move_safe)
 
     # Are there any safe moves left?
     safe_moves = []
-    for move, isSafe in is_move_safe.items():
-        if isSafe:
+    for move, is_safe in is_move_safe.items():
+        if is_safe:
             safe_moves.append(move)
 
     if len(safe_moves) == 0:
@@ -90,6 +84,29 @@ def move(game_state: typing.Dict) -> typing.Dict:
 
     print(f"MOVE {game_state['turn']}: {next_move}")
     return {"move": next_move}
+
+
+def collides_with_snake(my_head, snake):
+    is_move_safe = {"up": True, "down": True, "left": True, "right": True}
+    for body_part in snake["body"]:
+        if my_head["y"] + 1 == body_part["y"] and my_head["x"] == body_part["x"]:
+            is_move_safe["up"] = False
+        elif my_head["y"] - 1 == body_part["y"] and my_head["x"] == body_part["x"]:
+            is_move_safe["down"] = False
+        elif my_head["x"] + 1 == body_part["x"] and my_head["y"] == body_part["y"]:
+            is_move_safe["right"] = False
+        elif my_head["x"] - 1 == body_part["x"] and my_head["y"] == body_part["y"]:
+            is_move_safe["left"] = False
+    return is_move_safe
+
+
+def update_is_safe_move(first_is_safe_move, second_is_safe_move):
+    return {
+        "up": first_is_safe_move["up"] and second_is_safe_move["up"],
+        "down": first_is_safe_move["down"] and second_is_safe_move["down"],
+        "left": first_is_safe_move["left"] and second_is_safe_move["left"],
+        "right": first_is_safe_move["right"] and second_is_safe_move["right"],
+    }
 
 
 # Start server when `python main.py` is run
