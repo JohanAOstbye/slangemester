@@ -133,20 +133,22 @@ def move(game_state: typing.Dict) -> typing.Dict:
     food = game_state["board"]["food"]
 
     for food_item in food:
-        my_move_set.combine(evaluate_food(my_head, food_item))
+        my_move_set.combine(
+            evaluate_food(my_head, food_item, game_state["board"]["snakes"])
+        )
 
     next_move = my_move_set.choose_move()
     print(f"MOVE {game_state['turn']}: {next_move.direction}")
     return {"move": next_move.direction}
 
 
-def evaluate_food(my_head, food):
+def evaluate_food(my_head, food, snakes):
     food_move_set = MoveSet()
 
-    path_to_food = move_vector(my_head, food_item)
+    path_to_food = move_vector(my_head, food)
 
-    for snake in game_state["board"]["snakes"]:
-        snake_path_to_food = move_vector(snake["body"][0], food_item)
+    for snake in snakes:
+        snake_path_to_food = move_vector(snake["body"][0], food)
         if abs(snake_path_to_food["x"]) + abs(snake_path_to_food["y"]) < abs(
             path_to_food["x"]
         ) + abs(path_to_food["y"]):
