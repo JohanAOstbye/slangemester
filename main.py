@@ -43,8 +43,7 @@ def end(game_state: typing.Dict):
 # Valid moves are "up", "down", "left", or "right"
 # See https://docs.battlesnake.com/api/example-move for available data
 def move(game_state: typing.Dict) -> typing.Dict:
-
-    is_move_safe = {"up": True, "down": True, "left": True, "right": True}
+    my_move_set = MoveSet()
 
     # We've included code to prevent your Battlesnake from moving backwards
     my_head = game_state["you"]["body"][0]  # Coordinates of your head
@@ -54,59 +53,88 @@ def move(game_state: typing.Dict) -> typing.Dict:
     board_height = game_state["board"]["height"]
 
     if my_head["x"] == 0:
-        is_move_safe["left"] = False
+        my_move_set.left.is_safe = False
     if my_head["x"] == board_width - 1:
-        is_move_safe["right"] = False
+        my_move_set.right.is_safe = False
     if my_head["y"] == 0:
-        is_move_safe["down"] = False
+        my_move_set.down.is_safe = False
     if my_head["y"] == board_height - 1:
-        is_move_safe["up"] = False
+        my_move_set.up.is_safe = False
 
     for snake in game_state["board"]["snakes"]:
-        is_snake_move_safe = collides_with_snake(my_head, snake)
-        is_move_safe = update_is_safe_move(is_move_safe, is_snake_move_safe)
+        my_move_set.combine(collides_with_snake(my_head, snake))
 
     # Are there any safe moves left?
-    safe_moves = []
-    for move, is_safe in is_move_safe.items():
-        if is_safe:
-            safe_moves.append(move)
-
-    if len(safe_moves) == 0:
+    if my_move_set.has_safe_moves():
         print(f"MOVE {game_state['turn']}: No safe moves detected! Moving down")
         return {"move": "down"}
 
-    # Choose a random move from the safe ones
-    next_move = random.choice(safe_moves)
-
-    # TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
-    # food = game_state['board']['food']
+    food = game_state["board"]["food"]
 
     print(f"MOVE {game_state['turn']}: {next_move}")
     return {"move": next_move}
 
 
 def collides_with_snake(my_head, snake):
-    is_move_safe = {"up": True, "down": True, "left": True, "right": True}
+    sanke_move_set = MoveSet()
+
     for body_part in snake["body"]:
         if my_head["y"] + 1 == body_part["y"] and my_head["x"] == body_part["x"]:
-            is_move_safe["up"] = False
+            sanke_move_set.up.is_safe = False
         elif my_head["y"] - 1 == body_part["y"] and my_head["x"] == body_part["x"]:
-            is_move_safe["down"] = False
+            sanke_move_set.down.is_safe = False
         elif my_head["x"] + 1 == body_part["x"] and my_head["y"] == body_part["y"]:
-            is_move_safe["right"] = False
+            sanke_move_set.right.is_safe = False
         elif my_head["x"] - 1 == body_part["x"] and my_head["y"] == body_part["y"]:
-            is_move_safe["left"] = False
-    return is_move_safe
+            sanke_move_set.left.is_safe = False
+    return sanke_move_set
 
 
-def update_is_safe_move(first_is_safe_move, second_is_safe_move):
+def update_move(first_move_set, second_move_set):
+
     return {
-        "up": first_is_safe_move["up"] and second_is_safe_move["up"],
-        "down": first_is_safe_move["down"] and second_is_safe_move["down"],
-        "left": first_is_safe_move["left"] and second_is_safe_move["left"],
-        "right": first_is_safe_move["right"] and second_is_safe_move["right"],
+        "up": update_move_direction(first_move_set["up"], second_move_set["up"]),
+        "down": update_move_direction(first_move_set["down"], second_move_set["down"]),
+        "left": update_move_direction(first_move_set["left"], second_move_set["left"]),
+        "right": update_move_direction(
+            first_move_set["right"], second_move_set["right"]
+        ),
     }
+
+
+def update_move_direction(first_move_direction, second_move_direction):
+    return {
+        "safe": first_move_direction["safe"] and second_move_direction["safe"],
+        "preferrable": (
+            first_move_direction["preferrable"] + second_move_direction["preferrable"]
+        )
+        / 2,
+    }
+
+
+def eat_or_not_to_eat(my_snake, other_snake):
+    if my_snake["length"] > other_snake["length"]:
+        return {"up": False, "down": False, "left": False, "right": False}
+    other_snake_head = other_snake["body"][0]
+    my_snake_head = my_snake["body"][0]
+
+    calculated_distance = abs(my_snake_head["x"] - other_snake_head["x"]) + abs(
+        my_snake_head["y"] - other_snake_head["y"]
+    )
+    if calculated_distance > 2:
+        return {"up": False, "down": False, "left": False, "right": False}
+
+    if my_snake_head["x"] == other_snake_head["x"]:
+        if my_snake_head["y"] > other_snake_head["y"]:
+            return {"up": False, "down": True, "left": False, "right": False}
+        else:
+            return {"up": True, "down": False, "left": False, "right": False}
+    if my_snake_head["y"] == other_snake_head["y"]:
+        if my_snake_head["x"] > other_snake_head["x"]:
+            return {"up": False, "down": False, "left": False, "right": True}
+        else:
+            return {"up": False, "down": False, "left": True, "right": False}
+    return {"up": False, "down": False, "left": False, "right": False}
 
 
 # Start server when `python main.py` is run
@@ -114,3 +142,37 @@ if __name__ == "__main__":
     from server import run_server
 
     run_server({"info": info, "start": start, "move": move, "end": end})
+
+
+class MoveSet:
+    def __init__(self):
+        self.up = Move("up", True, 0)
+        self.down = Move("down", True, 0)
+        self.left = Move("left", True, 0)
+        self.right = Move("right", True, 0)
+
+    def combine(self, other):
+        self.up = self.up.combine(other.up)
+        self.down = self.down.combine(other.down)
+        self.left = self.left.combine(other.left)
+        self.right = self.right.combine(other.right)
+
+    def has_safe_moves(self):
+        return (
+            self.up.is_safe
+            or self.down.is_safe
+            or self.left.is_safe
+            or self.right.is_safe
+        )
+
+
+class Move:
+    def __init__(self, direction, is_safe, preferrable):
+        self.direction = direction
+        self.is_safe = is_safe
+        self.preferrable = preferrable
+
+    def combine(self, other):
+        self.is_safe = self.is_safe and other.is_safe
+        self.preferrable = (self.preferrable + other.preferrable) / 2
+        return self
