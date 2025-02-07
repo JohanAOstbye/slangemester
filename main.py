@@ -78,10 +78,10 @@ def move(game_state: typing.Dict) -> typing.Dict:
     food = game_state["board"]["food"]
     
     for food_item in food:
-        
-
-    print(f"MOVE {game_state['turn']}: {next_move}")
-    return {"move": next_move}
+    
+    next_move = my_move_set.choose_move()
+    print(f"MOVE {game_state['turn']}: {next_move.direction}")
+    return {"move": next_move.direction}
 
 
 def collides_with_snake(my_head, snake):
@@ -161,7 +161,19 @@ class MoveSet:
             or self.left.is_safe
             or self.right.is_safe
         )
+    
+    def choose_move(self):
+        chosen_move = self.up
+        if self.down.is_safe and self.down.preferrable > chosen_move.preferrable:
+            chosen_move = self.down
 
+        if self.left.is_safe and self.left.preferrable > chosen_move.preferrable:
+            chosen_move = self.left
+
+        if self.right.is_safe and self.right.preferrable > chosen_move.preferrable:
+            chosen_move = self.right
+
+        return chosen_move
 
 # Class for storing move information
 # direction: The direction of the move
